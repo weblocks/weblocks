@@ -6,6 +6,8 @@
  */
 declare(strict_types = 1);
 
+use Phalcon\Mvc\ViewBaseInterface;
+
 class Application extends Phalcon\Mvc\Application
 {
     const APP_PATH = __DIR__;
@@ -14,10 +16,31 @@ class Application extends Phalcon\Mvc\Application
     {
         $di = new Phalcon\Di\FactoryDefault();
         $di->setShared(
+            'volt',
+            function(ViewBaseInterface $view) use ($di) {
+                $volt = new Phalcon\Mvc\View\Engine\Volt($view, $di);
+                $volt->setOptions(
+                    [
+                        'always'    => true,
+                        'extension' => '.php',
+                        'separator' => '_',
+                        'stat'      => true,
+                        'path'      => self::APP_PATH . '/../cache/',
+                    ]
+                );
+                return $volt;
+            }
+        );
+        $di->setShared(
             'view',
             function() {
                 $view = new Phalcon\Mvc\View();
                 $view->setViewsDir(self::APP_PATH . '/');
+                $view->registerEngines(
+                    [
+                        '.volt' => 'volt',
+                    ]
+                );
                 return $view;
             }
         );
