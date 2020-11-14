@@ -10,6 +10,6 @@ class IndexController extends Phalcon\Mvc\Controller
 {
     public function indexAction()
     {
-        $this->view->message = 'Hello Weblocks';
+        $this->view->users = Users::find();
     }
 }
