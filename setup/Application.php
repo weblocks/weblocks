@@ -50,6 +50,13 @@ class Application extends Phalcon\Mvc\Application
         }
 
         if (!$err) {
+            $path = session_save_path();
+            if ('' === $path) {
+                $err = 'Please set session.save_path';
+            }
+        }
+
+        if (!$err) {
             if (extension_loaded('mysqli')) {
                 if (extension_loaded('pdo_mysql')) {
                     $this->_adapters['MySQL'] = 'mysql';

@@ -46,10 +46,35 @@ class Application extends Phalcon\Mvc\Application
                 return $adapter->load($options);
             }
         );
+        $di->setShared(
+            'session',
+            function() {
+                $session = new Phalcon\Session\Manager();
+                $files = new Phalcon\Session\Adapter\Stream();
+                $session
+                    ->setAdapter($files)
+                    ->start();
+                return $session;
+            }
+        );
         $di->set(
             'trans',
             function($language) {
                 return new Translate($language);
+            }
+        );
+        $di->setShared(
+            'url',
+            function() {
+                $config_file = __DIR__ . '/../conf/system.ini';
+                if (!file_exists($config_file)) {
+                    return new Exception($config_file . ' not exists.');
+                }
+                $config = new Phalcon\Config\Adapter\Ini($config_file);
+ 
+                $url = new Phalcon\Url();
+                $url->setBaseUri($config->baseDir);
+                return $url;
             }
         );
         $di->setShared(
