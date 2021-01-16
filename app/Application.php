@@ -66,14 +66,9 @@ class Application extends Phalcon\Mvc\Application
         $di->setShared(
             'url',
             function() {
-                $config_file = __DIR__ . '/../conf/system.ini';
-                if (!file_exists($config_file)) {
-                    return new Exception($config_file . ' not exists.');
-                }
-                $config = new Phalcon\Config\Adapter\Ini($config_file);
- 
+                $baseDir = '/' . basename(dirname(__DIR__)) . '/';
                 $url = new Phalcon\Url();
-                $url->setBaseUri($config->baseDir);
+                $url->setBaseUri($baseDir);
                 return $url;
             }
         );
