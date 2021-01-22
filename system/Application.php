@@ -26,19 +26,13 @@ class Application extends Phalcon\Mvc\Application
     private $_trans;
     private $_weblocks_admin = [];
 
-    private function check()
+    public function check()
     {
         $err = '';
 
         if (!$err) {
             if ('WIN' == strtoupper(substr(PHP_OS, 0, 3))) {
                 $this->_os = WINDOWS;
-            }
-        }
-
-        if (!$err) {
-            if (file_exists(self::CONFIG_FILE)) {
-                $err = 'Already exists ' . self::CONFIG_FILE . '.';
             }
         }
 
@@ -80,7 +74,21 @@ class Application extends Phalcon\Mvc\Application
         }
         return $err;
     }
-    private function clear_screen()
+    public function setup_check()
+    {
+        $err = '';
+        if (!$err) {
+            if (file_exists(self::CONFIG_FILE)) {
+                $err = 'Already exists ' . self::CONFIG_FILE . '.';
+            }
+        }
+
+        if (!$err) {
+            $err = $this->check();
+        }
+        return $err;
+    }
+    public function clear_screen()
     {
         $cmd = 'clear';
         if (WINDOWS === $this->_os) {
@@ -93,7 +101,7 @@ class Application extends Phalcon\Mvc\Application
         $line = trim(fgets(STDIN), PHP_EOL);
         return $line;
     }
-    private function input_adapter()
+    public function input_adapter()
     {
         if (!isset($this->_config['adapter'])) {
             $key = array_key_first($this->_adapters);
@@ -132,16 +140,16 @@ class Application extends Phalcon\Mvc\Application
             }
         }
     }
-    private function input_host()
+    public function input_host()
     {
-        if (!isset($this->_config['host'])) {
-            $this->_config['host'] = 'localhost';
+        if (!isset($this->_config['options']['host'])) {
+            $this->_config['options']['host'] = 'localhost';
         }
         while (true) {
             $this->clear_screen();
             $this->title('Host name');
 
-            echo 'blank is ' . $this->_config['host'] . PHP_EOL;
+            echo 'blank is ' . $this->_config['options']['host'] . PHP_EOL;
             echo 'Host name (if Q or q then exit) : ';
             $host = $this->input();
             if ('Q' === $host || 'q' === $host) {
@@ -151,21 +159,21 @@ class Application extends Phalcon\Mvc\Application
                 return true;
             }
             if ('' !== $host) {
-                $this->_config['host'] = $host;
+                $this->_config['options']['host'] = $host;
                 return true;
             }
         }
     }
-    private function input_database_name()
+    public function input_database_name()
     {
-        if (!isset($this->_config['dbname'])) {
-            $this->_config['dbname'] = 'weblocks';
+        if (!isset($this->_config['options']['dbname'])) {
+            $this->_config['options']['dbname'] = 'weblocks';
         }
         while (true) {
             $this->clear_screen();
             $this->title('Database name');
 
-            echo 'blank is ' . $this->_config['dbname'] . PHP_EOL;
+            echo 'blank is ' . $this->_config['options']['dbname'] . PHP_EOL;
             echo 'Database name (if Q or q then exit) : ';
             $name = $this->input();
             if ('Q' === $name || 'q' === $name) {
@@ -175,12 +183,12 @@ class Application extends Phalcon\Mvc\Application
                 return true;
             }
             if ('' !== $name) {
-                $this->_config['dbname'] = $name;
+                $this->_config['options']['dbname'] = $name;
                 return true;
             }
         }
     }
-    private function input_database_admin()
+    public function input_database_admin()
     {
         $adapter = '';
         foreach ($this->_adapters as $key => $value) {
@@ -239,17 +247,17 @@ class Application extends Phalcon\Mvc\Application
         }
         return true;
     }
-    private function input_database_connect_user()
+    public function input_database_connect_user()
     {
-        if (!isset($this->_config['username'])) {
-            $this->_config['username'] = 'dbuser';
+        if (!isset($this->_config['options']['username'])) {
+            $this->_config['options']['username'] = 'dbuser';
         }
         while (true) {
             $this->clear_screen();
-            $this->title($this->_config['dbname'] . ' connect user');
+            $this->title($this->_config['options']['dbname'] . ' connect user');
 
-            echo 'blank is ' . $this->_config['username'] . PHP_EOL;
-            echo $this->_config['dbname'] . ' connect user (if Q or q then exit) : ';
+            echo 'blank is ' . $this->_config['options']['username'] . PHP_EOL;
+            echo $this->_config['options']['dbname'] . ' connect user (if Q or q then exit) : ';
             $name = $this->input();
             if ('Q' === $name || 'q' === $name) {
                 return false;
@@ -258,36 +266,58 @@ class Application extends Phalcon\Mvc\Application
                 break;
             }
             if ('' !== $name) {
-                $this->_config['username'] = $name;
+                $this->_config['options']['username'] = $name;
                 break;
             }
         }
         while (true) {
             $this->clear_screen();
-            $this->title($this->_config['dbname'] . ' connect user');
+            $this->title($this->_config['options']['dbname'] . ' connect user');
 
-            echo $this->_config['dbname'] . ' connect user (if Q or q then exit) : ' . $this->_config['username'] . PHP_EOL;
+            echo $this->_config['options']['dbname'] . ' connect user : ' . $this->_config['options']['username'] . PHP_EOL;
             echo PHP_EOL;
 
-            if (isset($this->_config['password'])) {
-                echo 'blank is ' . $this->_config['password'] . PHP_EOL;
+            if (isset($this->_config['options']['password'])) {
+                echo 'blank is ' . $this->_config['options']['password'] . PHP_EOL;
             }
             echo 'Password (if Q or q then exit) : ';
             $pass = $this->input();
             if ('Q' === $pass || 'q' === $pass) {
                 return false;
             }
-            if (isset($this->_config['password']) && '' === $pass) {
+            if (isset($this->_config['options']['password']) && '' === $pass) {
                 break;
             }
             if ('' !== $pass) {
-                $this->_config['password'] = $pass;
+                $this->_config['options']['password'] = $pass;
                 break;
             }
         }
         return true;
     }
-    private function input_weblocks_admin()
+    public function input_database_connect_password()
+    {
+        while (true) {
+            $this->clear_screen();
+            $this->title($this->_config['options']['dbname'] . ' connect password');
+
+            echo $this->_config['options']['dbname'] . ' connect user : ' . $this->_config['options']['username'] . PHP_EOL;
+            echo PHP_EOL;
+
+            echo 'Password (if Q or q then exit) : ';
+            $pass = $this->input();
+            if ('Q' === $pass || 'q' === $pass) {
+                return false;
+            }
+            if ($this->_config['options']['password'] !== $pass && '' !== $pass) {
+                $this->_config['options']['password'] = $pass;
+                break;
+            }
+        }
+        return true;
+    }
+
+    public function input_weblocks_admin()
     {
         if (!isset($this->_weblocks_admin['name'])) {
             $this->_weblocks_admin['name'] = 'weblocker';
@@ -335,7 +365,7 @@ class Application extends Phalcon\Mvc\Application
         }
         return true;
     }
-    private function input_confirm()
+    public function setup_confirm()
     {
         while (true) {
             $this->clear_screen();
@@ -343,13 +373,13 @@ class Application extends Phalcon\Mvc\Application
 
             $keys = array_keys($this->_adapters, $this->_config['adapter']);
             echo sprintf('%19s', 'Adapter = ') . $keys[0] . PHP_EOL;
-            echo sprintf('%19s', 'Host = ') . $this->_config['host'] . PHP_EOL;
-            echo sprintf('%19s', 'Database Name = ') . $this->_config['dbname'] . PHP_EOL;
+            echo sprintf('%19s', 'Host = ') . $this->_config['options']['host'] . PHP_EOL;
+            echo sprintf('%19s', 'Database Name = ') . $this->_config['options']['dbname'] . PHP_EOL;
             echo sprintf('%19s', $keys[0] . ' Admin = ') . $this->_database_admin['name'] . PHP_EOL;
             echo sprintf('%19s', 'Password  = ') . $this->_database_admin['pass'] . PHP_EOL;
             echo PHP_EOL;
-            echo sprintf('%19s', 'Connect User = ') . $this->_config['username'] . PHP_EOL;
-            echo sprintf('%19s', 'Password = ') . $this->_config['password'] . PHP_EOL;
+            echo sprintf('%19s', 'Connect User = ') . $this->_config['options']['username'] . PHP_EOL;
+            echo sprintf('%19s', 'Password = ') . $this->_config['options']['password'] . PHP_EOL;
             echo PHP_EOL;
             echo sprintf('%19s', 'Weblocks Admin = ') . $this->_weblocks_admin['name'] . PHP_EOL;
             echo sprintf('%19s', 'Password = ') . $this->_weblocks_admin['pass'] . PHP_EOL;
@@ -367,7 +397,30 @@ class Application extends Phalcon\Mvc\Application
             }
         }
     }
-    private function create_config()
+    public function password_confirm()
+    {
+        while (true) {
+            $this->clear_screen();
+            $this->title('Confirm database connect password');
+
+            echo PHP_EOL;
+            echo sprintf('%19s', 'Connect User = ') . $this->_config['options']['username'] . PHP_EOL;
+            echo sprintf('%19s', 'Password = ') . $this->_config['options']['password'] . PHP_EOL;
+            echo PHP_EOL;
+            echo 'OK ? [y / n] or Quit ? [Q / q] : ';
+            $ans = $this->input();
+            if ('Y' === $ans || 'y' === $ans) {
+                return 'y';
+            }
+            if ('N' === $ans || 'n' === $ans) {
+                return 'n';
+            }
+            if ('Q' === $ans || 'q' === $ans) {
+                return 'q';
+            }
+        }
+    }
+    public function create_config()
     {
         $fp = fopen(self::CONFIG_FILE, 'w');
         if (false === $fp) {
@@ -375,18 +428,26 @@ class Application extends Phalcon\Mvc\Application
         }
         fwrite($fp, 'adapter  = ' . $this->_config['adapter'] . PHP_EOL);
         fwrite($fp, '[options]' . PHP_EOL);
-        fwrite($fp, 'host     = ' . $this->_config['host'] . PHP_EOL);
-        fwrite($fp, 'username = ' . $this->_config['username'] . PHP_EOL);
-        fwrite($fp, 'password = ' . $this->_config['password'] . PHP_EOL);
-        fwrite($fp, 'dbname   = ' . $this->_config['dbname'] . PHP_EOL);
+        fwrite($fp, 'host     = ' . $this->_config['options']['host'] . PHP_EOL);
+        fwrite($fp, 'username = ' . $this->_config['options']['username'] . PHP_EOL);
+        fwrite($fp, 'password = ' . $this->_config['options']['password'] . PHP_EOL);
+        fwrite($fp, 'dbname   = ' . $this->_config['options']['dbname'] . PHP_EOL);
         fclose($fp);
 
         return '';
     }
-    private function create_database()
+    public function load_config()
+    {
+        if (!file_exists(self::CONFIG_FILE)) {
+            return new Exception(self::CONFIG_FILE . ' not exists.');
+        }
+        $factory = new Phalcon\Config\ConfigFactory();
+        $this->_config = $factory->load(self::CONFIG_FILE);
+    }
+    public function create_database()
     {
         $config['adapter']             = $this->_config['adapter'];
-        $config['options']['host']     = $this->_config['host'];
+        $config['options']['host']     = $this->_config['options']['host'];
         $config['options']['username'] = $this->_database_admin['name'];
         $config['options']['password'] = $this->_database_admin['pass'];
 
@@ -399,31 +460,31 @@ class Application extends Phalcon\Mvc\Application
         $this->_trans = new Translate($this->_config['adapter']);
 
         $sql = $this->_trans->from('EXIST USER');
-        $sql = str_replace('{user}', $this->_config['username'], $sql);
+        $sql = str_replace('{user}', $this->_config['options']['username'], $sql);
         $result = $this->_pdo->query($sql);
         if (false === $result) {
             return 'Error : ' . $sql;
         }
         if (!count($result->fetchAll())) {
             $sql = $this->_trans->from('CREATE USER');
-            $sql = str_replace('{user}', $this->_config['username'], $sql);
-            $sql = str_replace('{password}', $this->_config['password'], $sql);
+            $sql = str_replace('{user}', $this->_config['options']['username'], $sql);
+            $sql = str_replace('{password}', $this->_config['options']['password'], $sql);
             if (false === $this->_pdo->execute($sql)) {
                 return 'Error : ' . $sql;
             }
         }
 
         $sql = $this->_trans->from('CREATE DATABASE');
-        $sql = str_replace('{database}', $this->_config['dbname'], $sql);
-        $sql = str_replace('{user}', $this->_config['username'], $sql);
+        $sql = str_replace('{database}', $this->_config['options']['dbname'], $sql);
+        $sql = str_replace('{user}', $this->_config['options']['username'], $sql);
         if (false === $this->_pdo->execute($sql)) {
             return 'Error : ' . $sql;
         }
 
         $sql = $this->_trans->from('GRANT ALL');
         if ('' !== $sql) {
-            $sql = str_replace('{database}', $this->_config['dbname'], $sql);
-            $sql = str_replace('{user}', $this->_config['username'], $sql);
+            $sql = str_replace('{database}', $this->_config['options']['dbname'], $sql);
+            $sql = str_replace('{user}', $this->_config['options']['username'], $sql);
             if (false === $this->_pdo->execute($sql)) {
                 return 'Error : ' . $sql;
             }
@@ -434,7 +495,7 @@ class Application extends Phalcon\Mvc\Application
         }
         return '';
     }
-    private function create_tables()
+    public function create_tables()
     {
         if (!is_readable(self::SCHEMA_FILE)) {
             return 'Not exist schema file.';
@@ -462,7 +523,7 @@ class Application extends Phalcon\Mvc\Application
         }
         return '';
     }
-    private function save_weblocks_admin()
+    public function save_weblocks_admin()
     {
         $user = new Users();
         $user->username = $this->_weblocks_admin['name'];
@@ -473,7 +534,27 @@ class Application extends Phalcon\Mvc\Application
         }
         return '';
     }
-    private function loaders()
+    public function change_password()
+    {
+        $factory = new Phalcon\Config\ConfigFactory();
+        $options = $factory->load(self::CONFIG_FILE);
+        $adapter = new Phalcon\Db\Adapter\PdoFactory();
+        $this->_pdo = $adapter->load($options);
+
+        $this->_trans = new Translate($this->_config['adapter']);
+
+        $sql = $this->_trans->from('CHANGE PASSWORD');
+        $sql = str_replace('{user}', $this->_config['options']['username'], $sql);
+        $sql = str_replace('{password}', $this->_config['options']['password'], $sql);
+        if (false === $this->_pdo->execute($sql)) {
+            return 'Error : ' . $sql;
+        }
+        if (false === $this->_pdo->close()) {
+            return "Can't close connect.";
+        }
+        return '';
+    }
+    public function loaders()
     {
         $paths = [];
         $files = scandir(self::APP_PATH);
@@ -491,18 +572,17 @@ class Application extends Phalcon\Mvc\Application
         $loader->registerDirs($paths);
         $loader->register();
     }
-    private function services()
+    public function services()
     {
         $di = new Phalcon\Di\FactoryDefault();
         $di->setShared(
             'db',
             function() {
-                $config_file = __DIR__ . '/../conf/database.ini';
-                if (!file_exists($config_file)) {
-                    return new Exception($config_file . ' not exists.');
+                if (!file_exists(self::CONFIG_FILE)) {
+                    return new Exception(self::CONFIG_FILE . ' not exists.');
                 }
                 $factory = new Phalcon\Config\ConfigFactory();
-                $options = $factory->load($config_file);
+                $options = $factory->load(self::CONFIG_FILE);
                 $adapter = new Phalcon\Db\Adapter\PdoFactory();
                 return $adapter->load($options);
             }
@@ -521,67 +601,6 @@ class Application extends Phalcon\Mvc\Application
         echo str_repeat('=', $len) . PHP_EOL;
         echo '= ' . $title . ' ='  . PHP_EOL;
         echo str_repeat('=', $len) . PHP_EOL;
-        echo PHP_EOL;
-    }
-    public function main()
-    {
-        $err = $this->check();
-        if ('' !== $err) {
-            echo $err . PHP_EOL;
-            return;
-        }
-        $this->services();
-        $this->loaders();
-
-        while (true) {
-            if (false == $this->input_adapter()) {
-                return;
-            }
-            if (false == $this->input_host()) {
-                return;
-            }
-            if (false == $this->input_database_name()) {
-                return;
-            }
-            if (false == $this->input_database_admin()) {
-                return;
-            }
-            if (false == $this->input_database_connect_user()) {
-                return;
-            }
-            if (false == $this->input_weblocks_admin()) {
-                return;
-            }
-            $ans = $this->input_confirm();
-            if ('y' == $ans) {
-                break;
-            }
-            if ('q' == $ans) {
-                return;
-            }
-        }
-        $err = $this->create_config();
-        if ('' != $err) {
-            echo $err . PHP_EOL;
-            return;
-        }
-        $err = $this->create_database();
-        if ('' != $err) {
-            echo $err . PHP_EOL;
-            return;
-        }
-        $err = $this->create_tables();
-        if ('' != $err) {
-            echo $err . PHP_EOL;
-            return;
-        }
-        $err = $this->save_weblocks_admin();
-        if ('' != $err) {
-            echo $err . PHP_EOL;
-            return;
-        }
-        $this->clear_screen();
-        echo 'Congratulations! Weblocks installed.' . PHP_EOL;
         echo PHP_EOL;
     }
 }
