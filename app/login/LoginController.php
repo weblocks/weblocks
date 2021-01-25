@@ -17,7 +17,7 @@ class LoginController extends Phalcon\Mvc\Controller
             $name = $this->request->getPost('name');
             $password = $this->request->getPost('password');
 
-            $user = Users::query()
+            $users = Users::query()
                 ->where('name = :name:')
                 ->andWhere('password = :pass:')
                 ->bind(
@@ -28,8 +28,24 @@ class LoginController extends Phalcon\Mvc\Controller
                 )
                 ->execute()
             ;
-            if ($user->count()) {
-                $this->session->set('user_name', $name);
+            if ($users->count()) {
+                $user = $users[0];
+                $this->session->set('user_name', $user->name);
+
+                $homes = Homes::query()
+                    ->where('owner = :owner:')
+                    ->bind(
+                        [
+                            'owner' => $user->role,
+                        ]
+                    )
+                    ->execute()
+                ;
+                if ($homes->count()) {
+                    $home = $homes[0];
+                    $this->response->redirect($home->model);
+                    return;
+                }
             }
         }
         $this->response->redirect('');

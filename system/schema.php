@@ -34,6 +34,9 @@ return [
       ['roles', 'inherit', 1, '3'],
       ['roles', 'inherit', 2, '4'],
       ['roles', 'inherit', 3, '0'],
+      ['homes', 'id',    0, '1'],
+      ['homes', 'model', 0, 'admin'],
+      ['homes', 'owner', 0, '1'],
     ],
   ],
   'views' => [
@@ -57,6 +60,17 @@ return [
                  max(case when node_name = 'role' then node_value else null end) as role
                  from nodes
                  where node_model = 'users'
+                 group by node_row
+                 order by node_row"
+    ],
+    [
+      'name' => 'homes',
+      'sql'  => "select
+                 max(case when node_name = 'id' then node_value else null end) as id,
+                 max(case when node_name = 'model' then node_value else null end) as model,
+                 max(case when node_name = 'owner' then node_value else null end) as owner
+                 from nodes
+                 where node_model = 'homes'
                  group by node_row
                  order by node_row"
     ],
