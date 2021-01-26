@@ -33,7 +33,24 @@ class LoginController extends Phalcon\Mvc\Controller
                 $this->session->set('user_name', $user->name);
 
                 $homes = Homes::query()
-                    ->where('owner = :owner:')
+                    ->where("auth = 'user'")
+                    ->andWhere('owner = :owner:')
+                    ->bind(
+                        [
+                            'owner' => $user->id,
+                        ]
+                    )
+                    ->execute()
+                ;
+                if ($homes->count()) {
+                    $home = $homes[0];
+                    $this->response->redirect($home->model);
+                    return;
+                }
+
+                $homes = Homes::query()
+                    ->where("auth = 'role'")
+                    ->andWhere('owner = :owner:')
                     ->bind(
                         [
                             'owner' => $user->role,
