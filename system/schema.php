@@ -35,6 +35,7 @@ return [
       ['roles', 'inherit', 2, '4'],
       ['roles', 'inherit', 3, '0'],
       ['homes', 'id',    0, '1'],
+      ['homes', 'auth',  0, 'role'],
       ['homes', 'model', 0, 'admin'],
       ['homes', 'owner', 0, '1'],
     ],
@@ -67,6 +68,7 @@ return [
       'name' => 'homes',
       'sql'  => "select
                  max(case when node_name = 'id' then node_value else null end) as id,
+                 max(case when node_name = 'auth' then node_value else null end) as auth,
                  max(case when node_name = 'model' then node_value else null end) as model,
                  max(case when node_name = 'owner' then node_value else null end) as owner
                  from nodes
